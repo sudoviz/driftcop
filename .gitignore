@@ -36,4 +36,4 @@ Thumbs.db
 **/yarn.lock
 **/pnpm-lock.yaml
 yarn.lock
-pnpm-lock.yaml
+pnpm-lock.yaml**/venv/
