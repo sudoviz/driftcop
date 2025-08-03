@@ -5,7 +5,6 @@
   <h3>Comprehensive Security Toolkit for MCP Servers</h3>
   <p>Vulnerability scanning, risk assessment, and real-time security management for the Model Context Protocol ecosystem</p>
 </div>
-## 🎥 Demo Video
 
 <a href="https://www.youtube.com/watch?v=ZJ-OocWpu44" target="_blank">
   <img
