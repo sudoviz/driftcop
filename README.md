@@ -1,7 +1,31 @@
+<!-- README.md – Drift-Cop ⚔️👁‍🗨 -->
+<p align="center">
+  <strong>DriftCop.</strong><br/>
+  The <em>ultrafast-fast</em> security cop keeping your MCP servers locked-in and locked-down.
+</p>
 
-## 🎯 Overview
+<p align="center">
+  <a href="https://github.com/your-org/drift-cop/actions"><img src="https://img.shields.io/github/actions/workflow/status/your-org/drift-cop/ci.yml?style=for-the-badge&label=CI%20&%20Tests" alt="CI Status"></a>
+  <a href="https://www.npmjs.com/package/drift-cop"><img src="https://img.shields.io/npm/v/drift-cop?style=for-the-badge" alt="npm version"></a>
+  <a href="https://github.com/your-org/drift-cop/blob/main/LICENSE"><img src="https://img.shields.io/github/license/your-org/drift-cop?style=for-the-badge" alt="License"></a>
+  <a href="https://twitter.com/intent/tweet?text=Meet%20Drift-Cop%20%E2%80%94%20the%20MCP%20drift-busting%20security%20bot!&url=https://github.com/your-org/drift-cop"><img src="https://img.shields.io/badge/Tweet-Spread%20the%20Word-1DA1F2?style=for-the-badge&logo=twitter" alt="Tweet"></a>
+</p>
 
-Drift-Cop is a defensive security platform designed to help developers and organizations identify, track, and mitigate security vulnerabilities in MCP server implementations. It consists of two main components working seamlessly together to provide end-to-end security coverage.
+---
+## 🎯 What is DriftCop?
+
+Drift-Cop is your Enterprise grade MCP security scanner based CLI + live dashboard that spots dangerous drift in AI tools. It spots injection hacks, and CVEs, signs every change in SigStore. Drift-Cop is designed to help AI developers and InfoSec organizations identify, track, and mitigate security vulnerabilities in MCP server implementations they use from external untrusted sources. 
+
+## 🔥 Why Drift-Cop?
+
+1. **Spot the Drift _instantly_** – Diff every manifest, dependency and workspace change against golden baselines in real-time.  
+2. **Attack-aware Scanning** – Rug-pull, typosquat, supply-chain & prompt-injection rules baked-in and update daily.  
+3. **Actionable Autopilot** – AI-generated fixes, PR suggestions and Slack/SIEM alerts 🚨.  
+4. **Two-Piece Powerhouse** – Lightweight CLI + Cloud Control-Plane give you end-to-end coverage without vendor lock-in.  
+
+> “We caught an auth-bypass typo _before_ it hit production. Drift-Cop paid for itself on day one.” – _A Very Happy DevOps Lead_
+
+---
 
 <a href="https://www.youtube.com/watch?v=ZJ-OocWpu44" target="_blank">
   <img
@@ -10,10 +34,42 @@ Drift-Cop is a defensive security platform designed to help developers and organ
     width="100%"  />
 </a>
 
+## 📦 Components
 
+### 1. MCP Security Scanner (mcp-sec)
+A powerful command-line security scanner that performs deep analysis of MCP servers, codebases, and dependencies.
+
+**Key Features:**
+- **Multi-Layer Scanning**: Comprehensive analysis of server manifests, workspace code, and dependencies
+- **Advanced Threat Detection**: 
+  - Typosquatting detection using Levenshtein distance and TF-IDF similarity
+  - Semantic drift analysis powered by LLM to detect mismatches between descriptions and capabilities
+  - Prompt injection pattern detection including hidden characters and system manipulation
+  - Known CVE scanning in dependencies
+- **Cryptographic Security**:
+  - SHA-256 based tool hashing with canonical JSON representation
+  - Sigstore integration for digital signatures (DSSE envelope format)
+  - Version tracking to detect unauthorized changes
+  - Lock file management for manifest pinning
+- **Language Support**: Extracts MCP tool definitions from 10+ languages using Tree-sitter AST parsing
+- **Flexible Reporting**: Markdown, JSON, and SARIF formats for CI/CD integration
+
+### 2. MCP Security Web UI (mcp-sec-web)
+A modern React-based dashboard providing real-time visualization and management of security findings.
+
+**Key Features:**
+- **Real-Time Dashboard**: Live monitoring of configuration drifts and security issues
+- **Interactive Approval Workflows**: 
+  - Quick approve for low-risk changes
+  - Detailed review process for high-risk modifications
+  - Complete audit trail with timestamps and approver tracking
+- **Advanced Filtering & Search**: Filter by severity, environment, repository, or custom search
+- **Bulk Operations**: Select and approve multiple drifts simultaneously
+- **Data Export**: CSV and JSON export for reporting and analysis
+- **Zero-Integration Design**: Works with existing MCP-SEC installations without code modifications
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                              MCP SECURITY SCANNER (mcp-sec)                         │
+│                              MCP SECURITY SCANNER (mcp-sec/)                         │
 │                         "Shift-Left Security for MCP Servers"                       │
 │                                   Version 0.1.0                                     │
 └─────────────────────────────────────────────────────────────────────────────────────┘
@@ -94,40 +150,6 @@ Drift-Cop is a defensive security platform designed to help developers and organ
 │                                                                                     │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ```
-
-## 📦 Components
-
-### 1. MCP Security Scanner (mcp-sec)
-A powerful command-line security scanner that performs deep analysis of MCP servers, codebases, and dependencies.
-
-**Key Features:**
-- **Multi-Layer Scanning**: Comprehensive analysis of server manifests, workspace code, and dependencies
-- **Advanced Threat Detection**: 
-  - Typosquatting detection using Levenshtein distance and TF-IDF similarity
-  - Semantic drift analysis powered by LLM to detect mismatches between descriptions and capabilities
-  - Prompt injection pattern detection including hidden characters and system manipulation
-  - Known CVE scanning in dependencies
-- **Cryptographic Security**:
-  - SHA-256 based tool hashing with canonical JSON representation
-  - Sigstore integration for digital signatures (DSSE envelope format)
-  - Version tracking to detect unauthorized changes
-  - Lock file management for manifest pinning
-- **Language Support**: Extracts MCP tool definitions from 10+ languages using Tree-sitter AST parsing
-- **Flexible Reporting**: Markdown, JSON, and SARIF formats for CI/CD integration
-
-### 2. MCP Security Web UI (mcp-sec-web)
-A modern React-based dashboard providing real-time visualization and management of security findings.
-
-**Key Features:**
-- **Real-Time Dashboard**: Live monitoring of configuration drifts and security issues
-- **Interactive Approval Workflows**: 
-  - Quick approve for low-risk changes
-  - Detailed review process for high-risk modifications
-  - Complete audit trail with timestamps and approver tracking
-- **Advanced Filtering & Search**: Filter by severity, environment, repository, or custom search
-- **Bulk Operations**: Select and approve multiple drifts simultaneously
-- **Data Export**: CSV and JSON export for reporting and analysis
-- **Zero-Integration Design**: Works with existing MCP-SEC installations without code modifications
 
 ## 🚀 Quick Start
 
