@@ -1,8 +1,6 @@
-# Drift-Cop
-
 <div align="center">
   <img src="logos/driftcop400x400.png" alt="MCP-Drift-Cop Logo - Security Scanner for Model Context Protocol" width="50" height="50">
-  <h3>Comprehensive Security Toolkit for MCP Servers</h3>
+  <h3>DriftCop - Comprehensive CLI based Security Scanner for MCP Servers with an optional UI layer</h3>
   <p>Vulnerability scanning, risk assessment, and real-time security management for the Model Context Protocol ecosystem</p>
 </div>
 
