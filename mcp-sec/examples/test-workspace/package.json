@@ -1,0 +1,14 @@
+{
+  "name": "vulnerable-mcp-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "mcp-client": "latest",
+    "mcp-server-filesystem": "0.1.0",
+    "reqests": "^2.0.0",
+    "typosquatted-pkg": "1.0.0",
+    "lodash": "*"
+  },
+  "devDependencies": {
+    "jest": "git+https://github.com/unknown/jest.git"
+  }
+}

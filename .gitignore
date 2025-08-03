@@ -1,0 +1,39 @@
+# Python virtual environments
+**/.venv
+.venv
+
+# Environment variables
+**/.env
+.env
+
+# Node.js dependencies
+**/node_modules/
+node_modules/
+
+# Build outputs
+**/dist/
+**/build/
+dist/
+build/
+
+# Logs
+**/logs/
+**/*.log
+logs/
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Lock files (keep package-lock.json but ignore others)
+**/yarn.lock
+**/pnpm-lock.yaml
+yarn.lock
+pnpm-lock.yaml

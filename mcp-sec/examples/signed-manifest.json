@@ -1,0 +1,43 @@
+{
+  "manifest": {
+    "name": "secure-filesystem",
+    "version": "2.0.0",
+    "description": "Secure filesystem access with digital signatures",
+    "author": "MCP Security Team",
+    "repository": "https://github.com/example/secure-filesystem",
+    "tools": [
+      {
+        "name": "read_file",
+        "description": "Read file contents with path validation",
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9/_.-]+$",
+              "maxLength": 256
+            }
+          },
+          "required": ["path"],
+          "additionalProperties": false
+        }
+      }
+    ],
+    "permissions": [
+      "filesystem:read"
+    ]
+  },
+  "signature": {
+    "signature": "base64-encoded-signature-here",
+    "algorithm": "rsa-sha256",
+    "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234...\n-----END PUBLIC KEY-----",
+    "metadata": {
+      "version": "1.0",
+      "manifest_hash": "a1b2c3d4e5f6...",
+      "algorithm": "rsa-sha256",
+      "signer": "secure-filesystem-team",
+      "timestamp": "2024-01-15T10:00:00Z",
+      "format": "mcp-signature-v1"
+    }
+  }
+}
