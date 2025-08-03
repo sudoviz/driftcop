@@ -1,13 +1,18 @@
 # Drift-Cop
 
 <div align="center">
-  <img src="logos/driftcop48x48.png" alt="MCP-Drift-Cop Logo - Security Scanner for Model Context Protocol" width="200" height="200">
+  <img src="logos/driftcop400x400.png" alt="MCP-Drift-Cop Logo - Security Scanner for Model Context Protocol" width="50" height="50">
   <h3>Comprehensive Security Toolkit for MCP Servers</h3>
   <p>Vulnerability scanning, risk assessment, and real-time security management for the Model Context Protocol ecosystem</p>
 </div>
 ## 🎥 Demo Video
 
-[![Watch the demo on YouTube](https://img.youtube.com/vi/ZJ-OocWpu44/0.jpg)](https://www.youtube.com/watch?v=ZJ-OocWpu44)
+<a href="https://www.youtube.com/watch?v=ZJ-OocWpu44" target="_blank">
+  <img
+    src="https://img.youtube.com/vi/ZJ-OocWpu44/maxresdefault.jpg"
+    alt="Watch the demo on YouTube"
+    width="100%"  />
+</a>
 
 
 ```
