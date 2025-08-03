@@ -7,13 +7,8 @@
 </div>
 ## 🎥 Demo Video
 
-<div align="center">
-  <iframe width="800" height="450" src="https://www.youtube.com/embed/ZJ-OocWpu44?si=Va2HfpNcA5Ba9Lbf" title="Drift-Cop Demo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-  <p><em>Watch the Drift-Cop demo video above</em></p>
-</div>
-  <p><em>Real-time drift monitoring and approval workflow</em></p>
-</div>
-*Click the thumbnail to watch the demo*
+[![Watch the demo on YouTube](https://img.youtube.com/vi/ZJ-OocWpu44/0.jpg)](https://www.youtube.com/watch?v=ZJ-OocWpu44)
+
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
