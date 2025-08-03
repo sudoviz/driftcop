@@ -1,10 +1,19 @@
 # Drift-Cop
 
 <div align="center">
-  <img src="logos/driftcop400x400.png" alt="MCP-Drift-Cop Logo - Security Scanner for Model Context Protocol" width="200" height="200">
+  <img src="logos/driftcop48x48.png" alt="MCP-Drift-Cop Logo - Security Scanner for Model Context Protocol" width="200" height="200">
   <h3>Comprehensive Security Toolkit for MCP Servers</h3>
   <p>Vulnerability scanning, risk assessment, and real-time security management for the Model Context Protocol ecosystem</p>
 </div>
+## 🎥 Demo Video
+
+<div align="center">
+  <iframe width="800" height="450" src="https://www.youtube.com/embed/ZJ-OocWpu44?si=Va2HfpNcA5Ba9Lbf" title="Drift-Cop Demo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  <p><em>Watch the Drift-Cop demo video above</em></p>
+</div>
+  <p><em>Real-time drift monitoring and approval workflow</em></p>
+</div>
+*Click the thumbnail to watch the demo*
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
