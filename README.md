@@ -1,3 +1,7 @@
+## 🎯 Overview
+
+Drift-Cop is a defensive security platform designed to help developers and organizations identify, track, and mitigate security vulnerabilities in MCP server implementations. It consists of two main components working seamlessly together to provide end-to-end security coverage.
+
 # Drift-Cop
 
 <div align="center">
@@ -97,17 +101,6 @@
 │                                                                                     │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ```
-
-## 🎯 Overview
-
-Drift-Cop is a defensive security platform designed to help developers and organizations identify, track, and mitigate security vulnerabilities in MCP server implementations. It consists of two main components working seamlessly together to provide end-to-end security coverage.
-
-## 📸 Dashboard Preview
-
-<div align="center">
-  <img src="logos/driftcopdashboard.gif" alt="Drift Cop Dashboard in Action" width="800">
-  <p><em>Real-time drift monitoring and approval workflow</em></p>
-</div>
 
 ## 📦 Components
 
