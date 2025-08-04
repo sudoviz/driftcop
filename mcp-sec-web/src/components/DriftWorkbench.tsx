@@ -4,17 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DriftBadge, SignerBadge } from "./DriftBadge";
+import { SecurityAnalysisPanel } from "./SecurityAnalysisPanel";
+import { SemanticAnalysisPanel } from "./SemanticAnalysisPanel";
 import { 
   ArrowLeft, 
   CheckCircle, 
   XCircle, 
   RefreshCw, 
   ExternalLink,
-  GitCommit,
   Shield,
   Clock,
-  Percent
+  AlertTriangle
 } from "lucide-react";
 import { Drift, DriftDiff } from "@/types/drift";
 import { formatDistanceToNow } from "date-fns";
@@ -136,77 +138,90 @@ export const DriftWorkbench = ({
         </CardContent>
       </Card>
 
-      {/* Analysis Section */}
-      <Card className="mb-6 glass-card hover-lift">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold">Analysis & Verification</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Similarity */}
-            <div className="space-y-3 p-4 glass-card hover-lift">
-              <div className="flex items-center gap-2">
-                <Percent className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Similarity</span>
-              </div>
-              <div className="text-3xl font-mono bg-gradient-primary bg-clip-text text-transparent">
-                {(drift.similarity * 100).toFixed(1)}%
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Content similarity score
-              </div>
-            </div>
+      {/* Security Summary Alert */}
+      {driftDiff.securitySummary && (driftDiff.securitySummary.criticalFindings > 0 || driftDiff.securitySummary.highFindings > 0) && (
+        <Alert className="mb-6 border-red-500/20 bg-red-500/10">
+          <AlertTriangle className="h-5 w-5 text-red-600" />
+          <AlertDescription className="text-red-700 dark:text-red-400">
+            <strong>Security Alert:</strong> This drift contains {driftDiff.securitySummary.criticalFindings} critical and {driftDiff.securitySummary.highFindings} high severity findings that require immediate attention.
+          </AlertDescription>
+        </Alert>
+      )}
 
-            {/* Added Verbs */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <GitCommit className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Added Verbs</span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {driftDiff.addedVerbs.map((verb, idx) => (
-                  <Badge key={idx} variant="outline" className="text-xs">
-                    {verb}
-                  </Badge>
-                ))}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                New API operations detected
-              </div>
-            </div>
 
-            {/* Verification Status */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Verification</span>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  {drift.signerOk ? (
-                    <CheckCircle className="h-4 w-4 text-status-success" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-status-error" />
-                  )}
-                  <span className="text-sm">
-                    Signer check: {drift.signerOk ? 'verified' : 'unknown'}
-                  </span>
+      {/* Permission Changes Analysis */}
+      {driftDiff.permissionChanges && driftDiff.permissionChanges.length > 0 && (
+        <div className="mb-6">
+          <SecurityAnalysisPanel permissionChanges={driftDiff.permissionChanges} />
+        </div>
+      )}
+
+      {/* Semantic Analysis */}
+      {driftDiff.semanticAnalysis && driftDiff.semanticAnalysis.length > 0 && (
+        <div className="mb-6">
+          <SemanticAnalysisPanel semanticAnalysis={driftDiff.semanticAnalysis} />
+        </div>
+      )}
+
+      {/* Security Findings */}
+      {driftDiff.securityFindings && driftDiff.securityFindings.length > 0 && (
+        <Card className="mb-6 glass-card hover-lift">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Security Findings
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Vulnerabilities and security issues detected in this drift
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {driftDiff.securityFindings.map((finding, idx) => (
+                <div
+                  key={idx}
+                  className={`p-4 rounded-lg border transition-all duration-300 hover:scale-[1.02] ${
+                    finding.severity === 'critical' ? 'border-red-500/20 bg-red-500/5' :
+                    finding.severity === 'high' ? 'border-orange-500/20 bg-orange-500/5' :
+                    finding.severity === 'medium' ? 'border-yellow-500/20 bg-yellow-500/5' :
+                    'border-blue-500/20 bg-blue-500/5'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge 
+                          variant={finding.severity === 'critical' || finding.severity === 'high' ? 'destructive' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {finding.severity.toUpperCase()}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {finding.type.replace(/_/g, ' ')}
+                        </Badge>
+                        {finding.tool && (
+                          <span className="text-sm font-medium">{finding.tool}</span>
+                        )}
+                      </div>
+                      <p className="text-sm mb-2">{finding.description}</p>
+                      {finding.location && (
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Location: <code className="bg-muted px-1 py-0.5 rounded">{finding.location}</code>
+                        </p>
+                      )}
+                      {finding.remediation && (
+                        <p className="text-xs text-muted-foreground">
+                          <strong>Remediation:</strong> {finding.remediation}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {driftDiff.rekorProof ? (
-                    <CheckCircle className="h-4 w-4 text-status-success" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-status-error" />
-                  )}
-                  <span className="text-sm">
-                    Rekor proof: {driftDiff.rekorProof ? 'verified' : 'missing'}
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Comment & Actions */}
       <Card className="glass-card hover-lift">

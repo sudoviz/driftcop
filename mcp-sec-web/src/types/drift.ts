@@ -33,6 +33,33 @@ export interface Drift {
   age?: string;
 }
 
+export interface PermissionChange {
+  tool: string;
+  type: 'added' | 'removed' | 'escalated';
+  from?: string[];
+  to?: string[];
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+}
+
+export interface SemanticAnalysis {
+  tool: string;
+  descriptionMatch: boolean;
+  claimedCapabilities: string;
+  actualCapabilities: string;
+  mismatchDetails?: string[];
+  riskScore: number;
+}
+
+export interface SecurityFinding {
+  type: 'typosquatting' | 'prompt_injection' | 'hardcoded_secret' | 'vulnerable_dependency' | 'excessive_permissions';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  tool?: string;
+  description: string;
+  location?: string;
+  remediation?: string;
+}
+
 export interface DriftDiff {
   id: string;
   prevContent: string;
@@ -40,6 +67,17 @@ export interface DriftDiff {
   addedVerbs: string[];
   removedVerbs: string[];
   rekorProof: boolean;
+  // New security analysis fields
+  permissionChanges: PermissionChange[];
+  semanticAnalysis: SemanticAnalysis[];
+  securityFindings: SecurityFinding[];
+  overallRiskScore: number;
+  securitySummary: {
+    criticalFindings: number;
+    highFindings: number;
+    mediumFindings: number;
+    lowFindings: number;
+  };
 }
 
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'blocked';

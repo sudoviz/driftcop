@@ -1,5 +1,6 @@
 // API client for MCP-SEC Web API
 import { Drift, DriftDiff } from '@/types/drift';
+import { mockDrifts, mockDriftDiff } from './mockData';
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -122,36 +123,3 @@ export const useApiHealth = () => {
   return apiClient.healthCheck();
 };
 
-// Mock drift diff for now - would need to be implemented in the backend
-export const mockDriftDiff: DriftDiff = {
-  id: "drift-1",
-  prevContent: `# MCP Tool Configuration
-{
-  "name": "file-reader",
-  "description": "Read files from filesystem", 
-  "input_schema": {
-    "type": "object",
-    "properties": {
-      "path": {"type": "string"}
-    },
-    "required": ["path"]
-  }
-}`,
-  newContent: `# MCP Tool Configuration
-{
-  "name": "file-reader",
-  "description": "Read and write files from filesystem",
-  "input_schema": {
-    "type": "object", 
-    "properties": {
-      "path": {"type": "string"},
-      "mode": {"type": "string", "enum": ["read", "write"]},
-      "content": {"type": "string"}
-    },
-    "required": ["path", "mode"]
-  }
-}`,
-  addedVerbs: ["write", "create", "delete"],
-  removedVerbs: [],
-  rekorProof: false,
-};

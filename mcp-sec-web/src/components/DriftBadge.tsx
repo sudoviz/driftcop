@@ -22,7 +22,6 @@ export const DriftBadge = ({ severity, className }: DriftBadgeProps) => {
     <Badge className={cn(
       config.className, 
       "gap-1 transition-all duration-300 hover:scale-105",
-      severity === 2 && "animate-glow-pulse",
       className
     )}>
       <Icon className="h-3 w-3" />

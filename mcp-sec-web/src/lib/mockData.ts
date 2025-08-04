@@ -195,4 +195,107 @@ networks:
   addedVerbs: ["delete", "update", "create", "migrate"],
   removedVerbs: ["legacy-sync"],
   rekorProof: false,
+  // New security analysis fields
+  permissionChanges: [
+    {
+      tool: "billing-service",
+      type: "escalated",
+      from: ["read"],
+      to: ["read", "write", "delete"],
+      severity: "critical",
+      description: "Tool permissions escalated from read-only to full write/delete access on payment data"
+    },
+    {
+      tool: "user-management",
+      type: "added",
+      to: ["spawn", "network"],
+      severity: "high",
+      description: "New dangerous permissions added: ability to spawn processes and make network calls"
+    },
+    {
+      tool: "analytics-viewer",
+      type: "removed",
+      from: ["write"],
+      severity: "low",
+      description: "Write permission removed, tool is now read-only which improves security"
+    }
+  ],
+  semanticAnalysis: [
+    {
+      tool: "billing-service",
+      descriptionMatch: false,
+      claimedCapabilities: "Read-only access to view billing information and generate reports",
+      actualCapabilities: "Full CRUD operations on payment methods, billing records, and financial data",
+      mismatchDetails: [
+        "Claims to be read-only but has write/delete permissions",
+        "Can modify payment methods despite description saying 'view only'",
+        "Has access to sensitive PII not mentioned in description"
+      ],
+      riskScore: 8.5
+    },
+    {
+      tool: "user-management",
+      descriptionMatch: true,
+      claimedCapabilities: "Manage user accounts, roles, and permissions",
+      actualCapabilities: "Create, update, delete users and manage role assignments",
+      riskScore: 3.2
+    },
+    {
+      tool: "analytics-viewer",
+      descriptionMatch: false,
+      claimedCapabilities: "Simple analytics dashboard for viewing metrics",
+      actualCapabilities: "Complex data processing with ability to execute custom queries and export data",
+      mismatchDetails: [
+        "Can execute arbitrary SQL queries not mentioned in description",
+        "Has data export capabilities that could lead to data exfiltration"
+      ],
+      riskScore: 6.8
+    }
+  ],
+  securityFindings: [
+    {
+      type: "excessive_permissions",
+      severity: "critical",
+      tool: "billing-service",
+      description: "Tool has write/delete permissions on sensitive financial data but claims to be read-only",
+      location: "manifest.json:45",
+      remediation: "Restrict permissions to read-only or update description to accurately reflect capabilities"
+    },
+    {
+      type: "hardcoded_secret",
+      severity: "high",
+      description: "Database password is hardcoded in the configuration file",
+      location: "docker-compose.yml:38",
+      remediation: "Use environment variables or secret management service instead of hardcoded credentials"
+    },
+    {
+      type: "typosquatting",
+      severity: "medium",
+      tool: "fiIesystem",
+      description: "Tool name 'fiIesystem' (with capital I) is suspiciously similar to 'filesystem'",
+      location: "manifest.json:72",
+      remediation: "Verify this is the intended tool name and not a typosquatting attempt"
+    },
+    {
+      type: "vulnerable_dependency",
+      severity: "high",
+      description: "nginx:1.20 has known vulnerabilities (CVE-2021-23017)",
+      location: "docker-compose.yml:6",
+      remediation: "Update to nginx:1.21 or later to patch security vulnerabilities"
+    },
+    {
+      type: "prompt_injection",
+      severity: "medium",
+      description: "Tool description contains hidden Unicode characters that could manipulate LLM behavior",
+      location: "manifest.json:89",
+      remediation: "Remove zero-width characters and Unicode manipulation from tool descriptions"
+    }
+  ],
+  overallRiskScore: 7.8,
+  securitySummary: {
+    criticalFindings: 1,
+    highFindings: 2,
+    mediumFindings: 2,
+    lowFindings: 0
+  }
 };
