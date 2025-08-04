@@ -37,14 +37,21 @@ def _generate_markdown(result: ScanResult) -> str:
     # Header
     lines.append("# MCP Security Scan Report")
     lines.append("")
-    lines.append(f"**Scan Date:** {result.scanned_at}")
-    lines.append(f"**Duration:** {result.scan_duration_seconds:.2f}s")
-    lines.append(f"**Total Risk Score:** {result.total_risk_score:.2f}/10.0")
     
-    if result.server_url:
-        lines.append(f"**Server URL:** {result.server_url}")
-    if result.workspace_path:
-        lines.append(f"**Workspace:** {result.workspace_path}")
+    # Get metadata values
+    scanned_at = result.metadata.get("scanned_at", datetime.now().isoformat())
+    scan_duration = result.metadata.get("scan_duration_seconds", 0.0)
+    total_risk_score = result.metadata.get("total_risk_score", 0.0)
+    
+    lines.append(f"**Scan Date:** {scanned_at}")
+    lines.append(f"**Duration:** {scan_duration:.2f}s")
+    lines.append(f"**Total Risk Score:** {total_risk_score:.2f}/10.0")
+    
+    # Add source information if from GitHub
+    if result.metadata.get("source") == "github":
+        lines.append(f"**Repository:** {result.metadata.get('repository', 'Unknown')}")
+        lines.append(f"**Branch:** {result.metadata.get('branch', 'Unknown')}")
+        lines.append(f"**URL:** {result.metadata.get('url', 'Unknown')}")
     
     lines.append("")
     
@@ -77,20 +84,24 @@ def _generate_markdown(result: ScanResult) -> str:
                 for finding in by_severity[severity]:
                     lines.append(f"#### {finding.title}")
                     lines.append("")
-                    lines.append(f"**Type:** {finding.type.value}")
+                    lines.append(f"**Category:** {finding.category.value}")
                     lines.append(f"**Description:** {finding.description}")
                     
                     if finding.file_path:
-                        location = finding.file_path
-                        if finding.line_number:
-                            location += f":{finding.line_number}"
-                        lines.append(f"**Location:** `{location}`")
+                        # Check for GitHub URL in metadata
+                        if finding.metadata.get("github_url"):
+                            lines.append(f"**Location:** [{finding.file_path}]({finding.metadata['github_url']})")
+                        else:
+                            location = finding.file_path
+                            if finding.line_number:
+                                location += f":{finding.line_number}"
+                            lines.append(f"**Location:** `{location}`")
                     
                     if finding.cwe_id:
                         lines.append(f"**CWE:** {finding.cwe_id}")
                     
-                    if finding.fix_suggestion:
-                        lines.append(f"**Fix:** {finding.fix_suggestion}")
+                    if finding.recommendation:
+                        lines.append(f"**Recommendation:** {finding.recommendation}")
                     
                     lines.append("")
     else:
@@ -107,7 +118,15 @@ def _generate_markdown(result: ScanResult) -> str:
 
 def _generate_json(result: ScanResult) -> str:
     """Generate a JSON report."""
-    return json.dumps(result.dict(), indent=2, default=str)
+    # Convert to dict and enrich with GitHub URLs
+    data = result.dict()
+    
+    # Ensure GitHub URLs are included in findings
+    for finding in data.get("findings", []):
+        if finding.get("metadata", {}).get("github_url"):
+            finding["github_url"] = finding["metadata"]["github_url"]
+    
+    return json.dumps(data, indent=2, default=str)
 
 
 def _generate_sarif(result: ScanResult) -> str:
@@ -137,7 +156,7 @@ def _generate_sarif(result: ScanResult) -> str:
     # Add results
     for finding in result.findings:
         sarif_result = {
-            "ruleId": finding.type.value,
+            "ruleId": finding.category.value,
             "level": _severity_to_sarif_level(finding.severity),
             "message": {"text": finding.description},
             "locations": []
@@ -160,9 +179,9 @@ def _generate_sarif(result: ScanResult) -> str:
             sarif_result["locations"].append(location)
         
         # Add fix if available
-        if finding.fix_suggestion:
+        if finding.recommendation:
             sarif_result["fixes"] = [{
-                "description": {"text": finding.fix_suggestion}
+                "description": {"text": finding.recommendation}
             }]
         
         sarif["runs"][0]["results"].append(sarif_result)
@@ -175,13 +194,13 @@ def _create_sarif_rules(findings: List[Finding]) -> List[Dict[str, Any]]:
     rules_dict = {}
     
     for finding in findings:
-        rule_id = finding.type.value
+        rule_id = finding.category.value
         if rule_id not in rules_dict:
             rule = {
                 "id": rule_id,
-                "name": finding.type.value.replace("_", " ").title(),
-                "shortDescription": {"text": f"Detects {finding.type.value}"},
-                "fullDescription": {"text": f"Security rule to detect {finding.type.value} issues in MCP configurations and usage"},
+                "name": finding.category.value.replace("_", " ").title(),
+                "shortDescription": {"text": f"Detects {finding.category.value}"},
+                "fullDescription": {"text": f"Security rule to detect {finding.category.value} issues in MCP configurations and usage"},
                 "defaultConfiguration": {
                     "level": _severity_to_sarif_level(Severity.MEDIUM)
                 }

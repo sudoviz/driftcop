@@ -17,6 +17,7 @@ from mcp_sec import __version__
 from mcp_sec.config import config
 from mcp_sec.models import ScanResult, Severity
 from mcp_sec.scanners import server_scanner, workspace_scanner, dependency_scanner
+from mcp_sec.scanners.github_scanner import scan_github_repo
 from mcp_sec.reporters import generate_report, ReportFormat
 from mcp_sec.tracking import VersionTracker, ApprovalManager
 from mcp_sec.lockfile import LockFileManager, verify_against_lockfile
@@ -56,7 +57,7 @@ def main(
 def scan_server(
     url: str = typer.Argument(..., help="MCP server URL to scan"),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output file path"),
-    format: ReportFormat = typer.Option(ReportFormat.MARKDOWN, "--format", "-f", help="Report format"),
+    format: ReportFormat = typer.Option(ReportFormat.JSON, "--format", "-f", help="Report format"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
 ) -> None:
     """Scan an MCP server for security issues."""
@@ -67,8 +68,8 @@ def scan_server(
             result = server_scanner.scan(url, verbose=verbose)
             
             duration = (datetime.now() - start_time).total_seconds()
-            result.scan_duration_seconds = duration
-            result.scanned_at = start_time.isoformat()
+            result.metadata["scan_duration_seconds"] = duration
+            result.metadata["scanned_at"] = start_time.isoformat()
             
             _display_results(result)
             
@@ -88,7 +89,7 @@ def scan_server(
 def scan_workspace(
     path: Path = typer.Argument(Path.cwd(), help="Workspace path to scan"),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output file path"),
-    format: ReportFormat = typer.Option(ReportFormat.MARKDOWN, "--format", "-f", help="Report format"),
+    format: ReportFormat = typer.Option(ReportFormat.JSON, "--format", "-f", help="Report format"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
 ) -> None:
     """Scan a workspace for MCP security issues."""
@@ -99,8 +100,8 @@ def scan_workspace(
             result = workspace_scanner.scan(path, verbose=verbose)
             
             duration = (datetime.now() - start_time).total_seconds()
-            result.scan_duration_seconds = duration
-            result.scanned_at = start_time.isoformat()
+            result.metadata["scan_duration_seconds"] = duration
+            result.metadata["scanned_at"] = start_time.isoformat()
             
             _display_results(result)
             
@@ -120,7 +121,7 @@ def scan_workspace(
 def scan_deps(
     path: Path = typer.Argument(Path.cwd(), help="Project path with dependencies"),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output file path"),
-    format: ReportFormat = typer.Option(ReportFormat.MARKDOWN, "--format", "-f", help="Report format"),
+    format: ReportFormat = typer.Option(ReportFormat.JSON, "--format", "-f", help="Report format"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
 ) -> None:
     """Scan project dependencies for security issues."""
@@ -131,8 +132,8 @@ def scan_deps(
             result = dependency_scanner.scan(path, verbose=verbose)
             
             duration = (datetime.now() - start_time).total_seconds()
-            result.scan_duration_seconds = duration
-            result.scanned_at = start_time.isoformat()
+            result.metadata["scan_duration_seconds"] = duration
+            result.metadata["scanned_at"] = start_time.isoformat()
             
             _display_results(result)
             
@@ -145,6 +146,48 @@ def scan_deps(
             
         except Exception as e:
             console.print(f"[red]Error scanning dependencies: {e}[/red]")
+            raise typer.Exit(1)
+
+
+@app.command()
+def scan_github(
+    repo_url: str = typer.Argument(..., help="GitHub repository URL (e.g., https://github.com/owner/repo)"),
+    branch: Optional[str] = typer.Option(None, "--branch", "-b", help="Git branch to scan (defaults to default branch)"),
+    token: Optional[str] = typer.Option(None, "--token", "-t", help="GitHub token for private repositories", envvar="GITHUB_TOKEN"),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output file path"),
+    format: ReportFormat = typer.Option(ReportFormat.JSON, "--format", "-f", help="Report format"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
+) -> None:
+    """Scan a GitHub repository for MCP security issues."""
+    # Hide token in console output
+    display_url = repo_url
+    if branch:
+        display_url += f" (branch: {branch})"
+    
+    with console.status(f"Scanning GitHub repository: {display_url}..."):
+        start_time = datetime.now()
+        
+        try:
+            # Import here to avoid circular imports
+            from mcp_sec.scanners.github_scanner import scan_github_repo
+            
+            result = scan_github_repo(repo_url, branch=branch, token=token)
+            
+            duration = (datetime.now() - start_time).total_seconds()
+            result.metadata["scan_duration_seconds"] = duration
+            result.metadata["scanned_at"] = start_time.isoformat()
+            
+            _display_results(result)
+            
+            if output:
+                report = generate_report(result, format)
+                output.write_text(report)
+                console.print(f"\n[green]Report saved to: {output}[/green]")
+            
+            _exit_with_code(result)
+            
+        except Exception as e:
+            console.print(f"[red]Error scanning GitHub repository: {e}[/red]")
             raise typer.Exit(1)
 
 
@@ -188,8 +231,8 @@ def ci_hook(
     else:
         result = workspace_scanner.scan(Path(target))
     
-    result.scan_duration_seconds = (datetime.now() - start_time).total_seconds()
-    result.scanned_at = start_time.isoformat()
+    result.metadata["scan_duration_seconds"] = (datetime.now() - start_time).total_seconds()
+    result.metadata["scanned_at"] = start_time.isoformat()
     
     # Generate SARIF if requested
     if sarif_output:
@@ -198,12 +241,26 @@ def ci_hook(
         console.print(f"[green]SARIF report saved to: {sarif_output}[/green]")
     
     # Check threshold
-    if result.total_risk_score > threshold:
-        console.print(f"[red]Risk score {result.total_risk_score:.2f} exceeds threshold {threshold}[/red]")
+    # Get total risk score from metadata or calculate it
+    total_risk_score = result.metadata.get("total_risk_score", 0.0)
+    if total_risk_score == 0.0 and result.findings:
+        # Calculate if not in metadata
+        severity_scores = {
+            Severity.CRITICAL: 10.0,
+            Severity.HIGH: 7.0,
+            Severity.MEDIUM: 4.0,
+            Severity.LOW: 1.0,
+            Severity.INFO: 0.0
+        }
+        total_risk_score = sum(severity_scores.get(f.severity, 0.0) for f in result.findings)
+        total_risk_score = min(total_risk_score, 10.0)
+    
+    if total_risk_score > threshold:
+        console.print(f"[red]Risk score {total_risk_score:.2f} exceeds threshold {threshold}[/red]")
         _display_results(result)
         raise typer.Exit(1)
     else:
-        console.print(f"[green]Risk score {result.total_risk_score:.2f} within threshold[/green]")
+        console.print(f"[green]Risk score {total_risk_score:.2f} within threshold[/green]")
         raise typer.Exit(0)
 
 
@@ -220,8 +277,27 @@ def _display_results(result: ScanResult) -> None:
     
     console.print("\n")
     console.print(table)
-    console.print(f"\nTotal Risk Score: [bold]{result.total_risk_score:.2f}[/bold]")
-    console.print(f"Scan Duration: {result.scan_duration_seconds:.2f}s")
+    
+    # Get total risk score from metadata or calculate it
+    total_risk_score = result.metadata.get("total_risk_score", 0.0)
+    if total_risk_score == 0.0 and result.findings:
+        # Calculate if not in metadata
+        severity_scores = {
+            Severity.CRITICAL: 10.0,
+            Severity.HIGH: 7.0,
+            Severity.MEDIUM: 4.0,
+            Severity.LOW: 1.0,
+            Severity.INFO: 0.0
+        }
+        total_risk_score = sum(severity_scores.get(f.severity, 0.0) for f in result.findings)
+        total_risk_score = min(total_risk_score, 10.0)
+    
+    console.print(f"\nTotal Risk Score: [bold]{total_risk_score:.2f}[/bold]")
+    
+    # Get scan duration from metadata if available
+    scan_duration = result.metadata.get("scan_duration_seconds")
+    if scan_duration:
+        console.print(f"Scan Duration: {scan_duration:.2f}s")
     
     if result.findings:
         console.print("\n[bold]Top Findings:[/bold]")
@@ -236,8 +312,19 @@ def _display_results(result: ScanResult) -> None:
             
             console.print(f"\n[{severity_color}]{finding.severity.upper()}[/{severity_color}]: {finding.title}")
             console.print(f"  {finding.description}")
-            if finding.fix_suggestion:
-                console.print(f"  [green]Fix:[/green] {finding.fix_suggestion}")
+            
+            # Show file location
+            if finding.file_path:
+                if finding.metadata.get("github_url"):
+                    console.print(f"  [cyan]Location:[/cyan] {finding.metadata['github_url']}")
+                else:
+                    location = f"{finding.file_path}"
+                    if finding.line_number:
+                        location += f":{finding.line_number}"
+                    console.print(f"  [cyan]Location:[/cyan] {location}")
+            
+            if hasattr(finding, 'recommendation') and finding.recommendation:
+                console.print(f"  [green]Fix:[/green] {finding.recommendation}")
 
 
 def _exit_with_code(result: ScanResult) -> None:
