@@ -11,7 +11,8 @@ from jsonschema import validate, ValidationError
 from mcp_sec.models import ScanResult, Finding, FindingType, Severity, MCPManifest
 from mcp_sec.analyzers import typo_detector, semantic_analyzer
 from mcp_sec.config import config
-from mcp_sec.crypto import compute_manifest_hash, verify_signed_manifest
+from mcp_sec.crypto import compute_manifest_digest
+from mcp_sec.crypto.verifier import verify_signed_manifest
 from mcp_sec.tracking import VersionTracker
 
 
@@ -129,7 +130,7 @@ def scan(url: str, verbose: bool = False, track_changes: bool = True) -> ScanRes
         findings.extend(change_findings)
     
     # Calculate manifest hash
-    manifest_hash = compute_manifest_hash(manifest)
+    manifest_hash = compute_manifest_digest(manifest)
     findings.append(Finding(
         id=str(uuid.uuid4()),
         type=FindingType.SCHEMA_VIOLATION,

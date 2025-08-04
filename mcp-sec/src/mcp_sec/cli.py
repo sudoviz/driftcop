@@ -1,9 +1,13 @@
 """CLI interface for MCP Security Scanner."""
 
 import sys
+import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+# Suppress urllib3 NotOpenSSLWarning
+warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
 
 import typer
 from rich.console import Console
@@ -315,7 +319,7 @@ def verify_signature(
     """Verify the digital signature of a manifest."""
     try:
         import json
-        from mcp_sec.crypto import verify_signed_manifest, verify_signature
+        from mcp_sec.crypto.verifier import verify_signed_manifest, verify_signature
         
         manifest_data = json.loads(manifest_file.read_text())
         
