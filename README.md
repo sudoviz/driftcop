@@ -293,7 +293,18 @@ We welcome contributions! Please see our contributing guidelines for:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+DriftCop is released under an **open-core licensing model**:
+
+- **Core Components** (`/mcp-sec`, `/mcp-sec-web`): Apache License 2.0
+- **Community Rules** (`/rules/community`): CC0 1.0 (Public Domain)
+- **Enterprise Features** (`/enterprise`, `/cloud`, `/rules/pro`): Business Source License 1.1
+- **Documentation** (`/docs`, `/logos`): CC BY 4.0
+
+See [LICENSE.txt](./LICENSE.txt) for full details.
+
+### Contributing
+
+By submitting contributions, you agree to our [Contributor License Agreement](./CLA.md).
 
 ## 🙏 Acknowledgments
 
