@@ -39,7 +39,7 @@ Drift-Cop is a defensive security platform designed to help developers and organ
 
 <div align="center">
   <a href="https://www.youtube.com/watch?v=m1pV3rEE66w" target="_blank">
-    <img src="logos/driftcop.png" alt="MCP - Drift-Cop Demo Video" width="800" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    <img src="https://github.com/sudo-vin/driftcop/blob/main/logos/Driftcop.png" alt="MCP - Drift-Cop Demo Video" width="800" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
   </a>
   <p><em>🎬 Click to watch the Drift-Cop demo video</em></p>
   <p><em>Real-time drift monitoring and approval workflow</em></p>
