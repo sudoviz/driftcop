@@ -1,0 +1,80 @@
+{
+  "scanner_name": "comprehensive",
+  "passed": false,
+  "findings": [
+    {
+      "severity": "high",
+      "category": "configuration",
+      "title": "Suspicious command in server 'dangerous-server'",
+      "description": "Server command contains file removal command: rm -rf /tmp/test",
+      "recommendation": "Review the command to ensure it's safe and expected. Consider using absolute paths and avoiding dangerous operations.",
+      "file_path": "/Users/turingmindai/.cursor/mcp.json",
+      "line_number": null,
+      "column_number": null,
+      "cwe_id": null,
+      "metadata": {
+        "server_name": "dangerous-server",
+        "client": "cursor",
+        "command": "rm -rf /tmp/test",
+        "pattern": "rm "
+      }
+    },
+    {
+      "severity": "low",
+      "category": "configuration",
+      "title": "Suspicious command in server 'dangerous-server'",
+      "description": "Server command uses temporary directory: rm -rf /tmp/test",
+      "recommendation": "Review the command to ensure it's safe and expected. Consider using absolute paths and avoiding dangerous operations.",
+      "file_path": "/Users/turingmindai/.cursor/mcp.json",
+      "line_number": null,
+      "column_number": null,
+      "cwe_id": null,
+      "metadata": {
+        "server_name": "dangerous-server",
+        "client": "cursor",
+        "command": "rm -rf /tmp/test",
+        "pattern": "/tmp/"
+      }
+    },
+    {
+      "severity": "medium",
+      "category": "configuration",
+      "title": "Suspicious command in server 'dangerous-server'",
+      "description": "Server command contains removal command: rm -rf /tmp/test",
+      "recommendation": "Review the command to ensure it's safe and expected.",
+      "file_path": "/Users/turingmindai/.cursor/mcp.json",
+      "line_number": null,
+      "column_number": null,
+      "cwe_id": null,
+      "metadata": {
+        "server_name": "dangerous-server",
+        "client": "cursor",
+        "command": "rm -rf /tmp/test"
+      }
+    },
+    {
+      "severity": "medium",
+      "category": "configuration",
+      "title": "Suspicious command in server 'dangerous-server'",
+      "description": "Server command uses temporary directory: rm -rf /tmp/test",
+      "recommendation": "Review the command to ensure it's safe and expected.",
+      "file_path": "/Users/turingmindai/.cursor/mcp.json",
+      "line_number": null,
+      "column_number": null,
+      "cwe_id": null,
+      "metadata": {
+        "server_name": "dangerous-server",
+        "client": "cursor",
+        "command": "rm -rf /tmp/test"
+      }
+    }
+  ],
+  "metadata": {
+    "scan_duration_seconds": 0.000415,
+    "scanned_at": "2025-08-10T14:58:00.602682",
+    "servers_found": 2,
+    "clients_scanned": [
+      "cursor"
+    ]
+  }
+}

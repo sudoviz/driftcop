@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-MCP-SEC Web API Backend
-Interfaces with existing MCP-SEC databases without modifying core code
+DRIFTCOP Web API Backend
+Interfaces with existing DRIFTCOP databases without modifying core code
 """
 
 import os
@@ -17,8 +17,8 @@ import uvicorn
 import sys
 from dotenv import load_dotenv
 
-# Load environment variables from the mcp-sec .env file
-env_path = Path(__file__).parent.parent.parent / "mcp-sec" / ".env"
+# Load environment variables from the DRIFTCOP .env file
+env_path = Path(__file__).parent.parent.parent / "mcp-sec" / ".env"  # Directory name kept for compatibility
 if env_path.exists():
     load_dotenv(env_path)
     print(f"Loaded environment from: {env_path}")
@@ -26,9 +26,32 @@ if env_path.exists():
 
 sys.path.append('/Users/turingmindai/Documents/VSCodeProjects/mcp-server-security/mcp-sec/src')
 from mcp_sec.analyzers.semantic_drift import SemanticDriftAnalyzer
-from mcp_sec.models import MCPManifest, MCPTool
+from mcp_sec.models import MCPManifest, MCPTool, Finding
 
-app = FastAPI(title="MCP-SEC Web API", version="1.0.0")
+app = FastAPI(title="DRIFTCOP Web API", version="1.0.0")
+
+def finding_to_ui_format(finding: Finding) -> Dict[str, Any]:
+    """
+    Convert Finding model from scanners to UI SecurityFinding format.
+    
+    Maps:
+    - category -> type
+    - recommendation -> remediation  
+    - file_path -> location
+    - metadata.tool -> tool (top level)
+    """
+    return {
+        "type": finding.category.value if hasattr(finding.category, 'value') else str(finding.category),
+        "severity": finding.severity.value if hasattr(finding.severity, 'value') else str(finding.severity),
+        "description": finding.description,
+        "remediation": finding.recommendation,
+        "location": finding.file_path,
+        "tool": finding.metadata.get("tool") if finding.metadata else None
+    }
+
+def findings_to_ui_format(findings: List[Finding]) -> List[Dict[str, Any]]:
+    """Convert a list of Finding objects to UI format."""
+    return [finding_to_ui_format(f) for f in findings]
 
 # Enable CORS for React frontend
 app.add_middleware(
@@ -39,9 +62,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Database paths - use existing MCP-SEC databases
+# Database paths - use existing DRIFTCOP databases
 HOME_DIR = Path.home()
-MCP_SEC_DIR = HOME_DIR / ".mcp-sec"
+MCP_SEC_DIR = HOME_DIR / ".mcp-sec"  # Keep directory name for compatibility
 TRACKING_DB = MCP_SEC_DIR / "tracking.db"
 APPROVALS_DB = MCP_SEC_DIR / "approvals.db"
 
@@ -220,7 +243,83 @@ def get_severity_from_change_type(change_type: str, risk_level: str) -> int:
 @app.get("/")
 async def root():
     """Health check endpoint."""
-    return {"message": "MCP-SEC Web API is running", "status": "healthy"}
+    return {"message": "DRIFTCOP Web API is running", "status": "healthy"}
+
+@app.get("/api/scan/{server_name}")
+async def scan_server_findings(server_name: str):
+    """
+    Run security scan on a server and return findings in UI format.
+    This demonstrates the new analyzers integration.
+    """
+    try:
+        # Import the scanners and analyzers
+        from mcp_sec.scanners.server_finder import ServerFinder
+        from mcp_sec.analyzers.tool_poisoning import ToolPoisoningAnalyzer
+        from mcp_sec.analyzers.cross_origin import CrossOriginAnalyzer
+        from mcp_sec.analyzers.toxic_flow import ToxicFlowAnalyzer
+        
+        # Find the server
+        finder = ServerFinder()
+        servers = finder.find_all_servers()
+        
+        # Find the specific server
+        target_server = None
+        for server_info in servers:
+            if server_info.server.name == server_name:
+                target_server = server_info
+                break
+        
+        if not target_server:
+            return {"error": f"Server '{server_name}' not found", "available_servers": [s.server.name for s in servers]}
+        
+        # Collect all findings
+        all_findings = []
+        
+        # Run analyzers if server has tools
+        if hasattr(target_server.server, 'tools') and target_server.server.tools:
+            # Tool Poisoning Analysis
+            tp_analyzer = ToolPoisoningAnalyzer()
+            tp_findings = tp_analyzer.analyze_tools(target_server.server.tools)
+            all_findings.extend(tp_findings)
+            
+            # Toxic Flow Analysis
+            tf_analyzer = ToxicFlowAnalyzer()
+            tf_findings = tf_analyzer.analyze_tools(target_server.server.tools)
+            all_findings.extend(tf_findings)
+            
+            # Cross-Origin Analysis (needs multiple servers context)
+            if len(servers) > 1:
+                co_analyzer = CrossOriginAnalyzer()
+                # Create a simple context for this server
+                server_contexts = [{
+                    'name': target_server.server.name,
+                    'tools': target_server.server.tools,
+                    'url': target_server.server.url if hasattr(target_server.server, 'url') else None
+                }]
+                co_findings = co_analyzer.analyze_cross_origin_risks(server_contexts)
+                all_findings.extend(co_findings)
+        
+        # Convert findings to UI format
+        ui_findings = findings_to_ui_format(all_findings)
+        
+        # Calculate summary
+        summary = {
+            "criticalFindings": sum(1 for f in ui_findings if f["severity"] == "critical"),
+            "highFindings": sum(1 for f in ui_findings if f["severity"] == "high"),
+            "mediumFindings": sum(1 for f in ui_findings if f["severity"] == "medium"),
+            "lowFindings": sum(1 for f in ui_findings if f["severity"] == "low")
+        }
+        
+        return {
+            "server": server_name,
+            "client": target_server.client,
+            "securityFindings": ui_findings,
+            "securitySummary": summary,
+            "overallRiskScore": min(10.0, summary["criticalFindings"] * 10 + summary["highFindings"] * 7 + summary["mediumFindings"] * 4 + summary["lowFindings"])
+        }
+        
+    except Exception as e:
+        return {"error": f"Error scanning server: {str(e)}"}
 
 @app.get("/api/drifts", response_model=List[Drift])
 async def get_drifts(
@@ -603,6 +702,12 @@ async def get_drift_diff(drift_id: str):
                 semantic_analysis_data = json.loads(row['tool_data'])
             except:
                 pass
+        
+        # NOTE: To integrate real scanner findings, you can do:
+        # from mcp_sec.scanners.server_scanner import scan
+        # scan_result = scan(server_url)
+        # ui_findings = findings_to_ui_format(scan_result.findings)
+        # security_findings.extend(ui_findings)
         
         # Add general security findings based on change type
         if change_type == "tool_added":
@@ -1124,10 +1229,10 @@ async def get_stats():
         raise HTTPException(status_code=500, detail=f"Error fetching stats: {str(e)}")
 
 if __name__ == "__main__":
-    # Ensure MCP-SEC directory exists
+    # Ensure DRIFTCOP directory exists
     MCP_SEC_DIR.mkdir(exist_ok=True)
     
-    print(f"Starting MCP-SEC Web API...")
+    print(f"Starting DRIFTCOP Web API...")
     print(f"Tracking DB: {TRACKING_DB}")
     print(f"Approvals DB: {APPROVALS_DB}")
     print(f"Frontend CORS enabled for: http://localhost:8082")

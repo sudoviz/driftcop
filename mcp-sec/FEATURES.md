@@ -2,9 +2,23 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│                              MCP SECURITY SCANNER (mcp-sec)                         │
+│                          MCP SECURITY SCANNER - DRIFTCOP                            │
 │                         "Shift-Left Security for MCP Servers"                       │
-│                                   Version 0.1.0                                     │
+│                              Version 0.2.0 - Phase 1 Complete                       │
+│                      Now with Auto-Discovery and Advanced Analyzers                 │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                            DISCOVERY & AUTO-DETECTION (NEW)                         │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│  ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐    │
+│  │  CLIENT DISCOVERY    │  │   CONFIG PARSER      │  │   SERVER FINDER      │    │
+│  ├──────────────────────┤  ├──────────────────────┤  ├──────────────────────┤    │
+│  │ • Claude configs     │─▶│ • Format detection   │─▶│ • Auto-discovery     │    │
+│  │ • Cursor configs     │  │ • Multi-client       │  │ • Cross-client scan  │    │
+│  │ • VSCode configs     │  │ • Unified parsing    │  │ • Config aggregation │    │
+│  │ • Windsurf configs   │  │ • JSON/YAML support  │  │ • Security analysis  │    │
+│  └──────────────────────┘  └──────────────────────┘  └──────────────────────┘    │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
@@ -14,11 +28,11 @@
 │  ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐    │
 │  │   SERVER SCANNER     │  │  WORKSPACE SCANNER   │  │  DEPENDENCY SCANNER  │    │
 │  ├──────────────────────┤  ├──────────────────────┤  ├──────────────────────┤    │
-│  │ • Manifest validation │  │ • Prompt injection   │  │ • CVE detection      │    │
-│  │ • Schema checking     │  │ • MCP tool extraction│  │ • Typosquatting      │    │
-│  │ • Permission audit    │  │ • Code pattern match │  │ • Version checks     │    │
-│  │ • Typo detection      │  │ • Zero-width chars   │  │ • Package analysis   │    │
-│  │ • Semantic analysis   │  │ • Security patterns  │  │ • Lock verification  │    │
+│  │ ✅ Manifest validation│  │ • Prompt injection   │  │ • CVE detection      │    │
+│  │ ✅ Schema checking    │  │ • MCP tool extraction│  │ • Typosquatting      │    │
+│  │ ✅ Permission audit   │  │ • Code pattern match │  │ • Version checks     │    │
+│  │ ✅ Typo detection     │  │ • Zero-width chars   │  │ • Package analysis   │    │
+│  │ ✅ Semantic analysis  │  │ • Security patterns  │  │ • Lock verification  │    │
 │  └──────────────────────┘  └──────────────────────┘  └──────────────────────┘    │
 │           ▲                          ▲                          ▲                   │
 │           │                          │                          │                   │
@@ -29,11 +43,9 @@
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
 │                               SECURITY ANALYZERS                                    │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                     │
 │  ┌─────────────────────────────────┐      ┌─────────────────────────────────┐    │
-│  │     TYPO DETECTOR               │      │    SEMANTIC ANALYZER            │    │
+│  │   ✅ TYPO DETECTOR (FIXED)      │      │ ✅ SEMANTIC ANALYZER (FIXED)   │    │
 │  ├─────────────────────────────────┤      ├─────────────────────────────────┤    │
-│  │                                 │      │                                 │    │
 │  │  fiIesystem ≈ filesystem       │      │  🤖 OpenAI LLM Analysis         │    │
 │  │  ┌───────────────────┐         │      │  ┌─────────────────────┐       │    │
 │  │  │ Levenshtein ≤ 2   │         │      │  │ Description:        │       │    │
@@ -41,9 +53,22 @@
 │  │  │ Homograph check   │         │      │  │ Schema:             │       │    │
 │  │  │ TF-IDF + Cosine   │         │      │  │ {delete: true} ❌   │       │    │
 │  │  └───────────────────┘         │      │  └─────────────────────┘       │    │
-│  │                                 │      │                                 │    │
 │  └─────────────────────────────────┘      └─────────────────────────────────┘    │
 │                                                                                     │
+│  ┌─────────────────────────────────┐      ┌─────────────────────────────────┐    │
+│  │   TOOL POISONING (NEW)          │      │    CROSS-ORIGIN (NEW)          │    │
+│  ├─────────────────────────────────┤      ├─────────────────────────────────┤    │
+│  │ • Command injection patterns    │      │ • Attack chain detection        │    │
+│  │ • Data exfiltration detection   │      │ • Privilege escalation paths    │    │
+│  │ • Destructive operations        │      │ • Cross-server data theft       │    │
+│  │ • Obfuscation techniques        │      │ • Server collusion analysis     │    │
+│  └─────────────────────────────────┘      └─────────────────────────────────┘    │
+│                                                                                     │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐  │
+│  │                          TOXIC FLOW ANALYZER (NEW)                          │  │
+│  ├─────────────────────────────────────────────────────────────────────────────┤  │
+│  │  Download → Execute | Read → Upload | List → Delete | Dangerous Combos      │  │
+│  └─────────────────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐

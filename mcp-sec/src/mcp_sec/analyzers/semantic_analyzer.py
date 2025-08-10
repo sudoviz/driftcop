@@ -1,7 +1,6 @@
 """Semantic drift detection using LLM analysis."""
 
 import json
-import uuid
 from typing import List, Optional
 
 import openai
@@ -28,13 +27,12 @@ def check_tool_semantic_drift(tool: MCPTool) -> List[Finding]:
         
         if analysis and analysis.get("is_suspicious"):
             findings.append(Finding(
-                id=str(uuid.uuid4()),
-                type=FindingType.SEMANTIC_DRIFT,
+                category=FindingType.SEMANTIC_DRIFT,
                 severity=Severity.MEDIUM,
                 title=f"Semantic drift in tool '{tool.name}'",
                 description=analysis.get("justification", "Tool capabilities don't match description"),
                 cwe_id="CWE-601",
-                fix_suggestion="Ensure tool description accurately reflects its capabilities",
+                recommendation="Ensure tool description accurately reflects its capabilities",
                 metadata={
                     "tool_name": tool.name,
                     "analysis": analysis
@@ -150,13 +148,12 @@ def _check_tool_permissions(tool: MCPTool) -> List[Finding]:
     for pattern, description in suspicious_patterns.items():
         if pattern in schema_str:
             findings.append(Finding(
-                id=str(uuid.uuid4()),
-                type=FindingType.EXCESSIVE_PERMISSIONS,
+                category=FindingType.EXCESSIVE_PERMISSIONS,
                 severity=Severity.LOW,
                 title=f"Overly permissive schema in tool '{tool.name}'",
                 description=f"Tool schema {description}, which may allow unintended inputs",
                 cwe_id="CWE-20",
-                fix_suggestion="Tighten input validation constraints in the schema",
+                recommendation="Tighten input validation constraints in the schema",
                 metadata={"tool_name": tool.name, "pattern": pattern}
             ))
     
@@ -167,13 +164,12 @@ def _check_tool_permissions(tool: MCPTool) -> List[Finding]:
     for param in param_names:
         if any(danger in param.lower() for danger in dangerous_params):
             findings.append(Finding(
-                id=str(uuid.uuid4()),
-                type=FindingType.EXCESSIVE_PERMISSIONS,
+                category=FindingType.EXCESSIVE_PERMISSIONS,
                 severity=Severity.HIGH,
                 title=f"Potential command injection parameter in '{tool.name}'",
                 description=f"Parameter '{param}' suggests command execution capability",
                 cwe_id="CWE-78",
-                fix_suggestion="Ensure proper input validation and sandboxing for command execution",
+                recommendation="Ensure proper input validation and sandboxing for command execution",
                 metadata={"tool_name": tool.name, "parameter": param}
             ))
     

@@ -4,7 +4,13 @@
 
 ```mermaid
 graph TB
-    subgraph "MCP SECURITY SCANNER"
+    subgraph "MCP SECURITY SCANNER (DRIFTCOP)"
+        subgraph "Discovery & Detection"
+            CD[Client Discovery<br/>• Claude config<br/>• Cursor config<br/>• VSCode config<br/>• Windsurf config]
+            CP[Config Parser<br/>• Format detection<br/>• Multi-client support<br/>• Unified parsing]
+            SF[Server Finder<br/>• Auto-discovery<br/>• Cross-client scan<br/>• Config aggregation]
+        end
+        
         subgraph "Core Scanners"
             SS[Server Scanner<br/>• Manifest validation<br/>• Schema checking<br/>• Permission audit<br/>• Typo detection<br/>• Semantic analysis]
             WS[Workspace Scanner<br/>• Prompt injection<br/>• MCP tool extraction<br/>• Code pattern match<br/>• Zero-width chars<br/>• Security patterns]
@@ -14,6 +20,9 @@ graph TB
         subgraph "Security Analyzers"
             TD[Typo Detector<br/>• Levenshtein ≤ 2<br/>• Dice coefficient<br/>• Homograph check<br/>• TF-IDF + Cosine]
             SA[Semantic Analyzer<br/>🤖 OpenAI LLM Analysis<br/>• Description vs Schema<br/>• Permission mismatch<br/>• Capability drift]
+            TP[Tool Poisoning<br/>• Command injection<br/>• Data exfiltration<br/>• Destructive ops<br/>• Obfuscation]
+            CO[Cross-Origin<br/>• Attack chains<br/>• Privilege escalation<br/>• Data theft paths<br/>• Server collusion]
+            TF[Toxic Flow<br/>• Download→Execute<br/>• Read→Upload<br/>• List→Delete<br/>• Dangerous combos]
         end
         
         subgraph "Cryptographic Security"
@@ -29,10 +38,18 @@ graph TB
         end
     end
     
+    CD --> CP
+    CP --> SF
+    SF --> SS
+    
     SS --> TD
     SS --> SA
+    SS --> TP
+    SS --> CO
+    SS --> TF
     WS --> TD
     WS --> SA
+    WS --> TP
     DS --> TD
     
     SS --> TH
@@ -132,9 +149,13 @@ sequenceDiagram
 ```mermaid
 graph TD
     CLI[driftcop] --> SCAN[Scan Commands]
+    CLI --> DISCOVERY[Discovery Commands]
     CLI --> CRYPTO[Crypto Commands]
     CLI --> CHANGE[Change Management]
     CLI --> LOCK[Lock File Commands]
+    
+    DISCOVERY --> DISC_CMD[discover --client --scan]
+    DISCOVERY --> SCAN_ALL[scan-all --output]
     
     SCAN --> SS_CMD[scan-server URL]
     SCAN --> WS_CMD[scan-workspace PATH]
@@ -186,9 +207,23 @@ graph TB
 
 ```mermaid
 pie title Feature Implementation Status
-    "Complete" : 12
-    "Not Started" : 3
+    "Complete" : 18
+    "Bug Fixes Applied" : 3
+    "Not Started" : 0
 ```
+
+## Phase 1 Integration Changes
+
+### Critical Bug Fixes
+- **Finding Model**: Fixed incorrect field usage (`id`, `type`, `fix_suggestion` → `category`, `recommendation`)
+- **ScanResult Model**: Fixed incorrect return format (`server_url`, `total_risk_score` → proper model fields)
+- **Runtime Errors**: Eliminated validation errors that would have caused crashes
+
+### New Features Added
+- **Auto-Discovery**: Finds all MCP configurations across Claude, Cursor, VSCode, Windsurf
+- **Config Parser**: Handles different configuration formats transparently
+- **Advanced Analyzers**: Tool poisoning, cross-origin attacks, toxic flows
+- **CLI Commands**: `discover` and `scan-all` for comprehensive security scanning
 
 ## Risk Scoring Distribution
 

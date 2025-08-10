@@ -4,11 +4,21 @@ A security scanner for Model Context Protocol (MCP) servers that helps developer
 
 ## Features
 
+### Core Security Scanning
 - **Manifest Scanning**: Validates MCP server manifests against schema and security best practices
 - **Typosquatting Detection**: Uses Levenshtein distance and character embeddings to detect potential typosquatting attacks
 - **Semantic Drift Analysis**: LLM-powered detection of mismatches between tool descriptions and actual capabilities
 - **Dependency Scanning**: Identifies vulnerable dependencies and typosquatted packages
 - **Workspace Scanning**: Detects prompt injection patterns and hardcoded credentials in code
+
+### Advanced Threat Detection (New)
+- **Auto-Discovery**: Automatically finds all MCP configurations across Claude, Cursor, VSCode, and Windsurf
+- **Tool Poisoning Detection**: Identifies malicious patterns in tool descriptions (command injection, data exfiltration)
+- **Cross-Origin Attack Detection**: Detects attack chains across multiple MCP servers
+- **Toxic Flow Analysis**: Identifies dangerous tool combinations (download→execute, read→upload)
+- **Multi-Client Support**: Scans configurations from all major MCP clients simultaneously
+
+### Security Infrastructure
 - **Multiple Report Formats**: Markdown, JSON, and SARIF for CI/CD integration
 - **Immutable Tool Hashing**: Generate cryptographic fingerprints of tool definitions
 - **Digital Signature Verification**: Verify manifest authenticity with RSA/Ed25519 signatures
@@ -30,21 +40,39 @@ poetry install
 
 ## Usage
 
-### Scan an MCP Server
+### Discover All MCP Configurations (New)
 
 ```bash
+# Discover all MCP configurations on your system
+driftcop discover
+
+# Discover and scan for security issues
+driftcop discover --scan
+
+# Discover configurations for a specific client
+driftcop discover --client cursor --scan
+```
+
+### Comprehensive Security Scan (New)
+
+```bash
+# Scan all discovered MCP configurations
+driftcop scan-all
+
+# Generate a comprehensive report
+driftcop scan-all --output full-report.json --format json
+```
+
+### Traditional Scanning
+
+```bash
+# Scan a specific MCP server
 driftcop scan-server https://example.com/mcp-server
-```
 
-### Scan a Workspace
-
-```bash
+# Scan a workspace
 driftcop scan-workspace /path/to/project
-```
 
-### Scan Dependencies
-
-```bash
+# Scan dependencies
 driftcop scan-deps /path/to/project
 ```
 

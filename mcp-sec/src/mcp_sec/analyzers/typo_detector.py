@@ -1,6 +1,5 @@
 """Typosquatting detection for MCP server names."""
 
-import uuid
 from typing import List
 import Levenshtein
 import numpy as np
@@ -25,13 +24,12 @@ def check_server_name(name: str) -> List[Finding]:
         distance = Levenshtein.distance(name.lower(), known.lower())
         if 0 < distance <= 2:
             findings.append(Finding(
-                id=str(uuid.uuid4()),
-                type=FindingType.TYPOSQUATTING,
+                category=FindingType.TYPOSQUATTING,
                 severity=Severity.HIGH,
                 title=f"Possible typosquatting of '{known}'",
                 description=f"Server name '{name}' is very similar to known server '{known}' (edit distance: {distance})",
                 cwe_id="CWE-601",
-                fix_suggestion=f"If this is intentional, consider a more distinct name. If not, did you mean '{known}'?",
+                recommendation=f"If this is intentional, consider a more distinct name. If not, did you mean '{known}'?",
                 metadata={"similar_to": known, "distance": distance}
             ))
         
@@ -39,13 +37,12 @@ def check_server_name(name: str) -> List[Finding]:
         dice_score = _dice_coefficient(name.lower(), known.lower())
         if dice_score > config.typo_similarity_threshold and name.lower() != known.lower():
             findings.append(Finding(
-                id=str(uuid.uuid4()),
-                type=FindingType.TYPOSQUATTING,
+                category=FindingType.TYPOSQUATTING,
                 severity=Severity.MEDIUM,
                 title=f"Name similarity with '{known}'",
                 description=f"Server name '{name}' has high similarity to '{known}' (Dice coefficient: {dice_score:.2f})",
                 cwe_id="CWE-601",
-                fix_suggestion="Consider a more distinct server name to avoid confusion",
+                recommendation="Consider a more distinct server name to avoid confusion",
                 metadata={"similar_to": known, "dice_score": dice_score}
             ))
     
@@ -111,13 +108,12 @@ def _check_homographs(name: str) -> List[Finding]:
     
     if suspicious_chars:
         findings.append(Finding(
-            id=str(uuid.uuid4()),
-            type=FindingType.TYPOSQUATTING,
+            category=FindingType.TYPOSQUATTING,
             severity=Severity.HIGH,
             title="Possible homograph attack",
             description=f"Server name contains characters that look similar to Latin letters: {suspicious_chars}",
             cwe_id="CWE-601",
-            fix_suggestion="Use only standard ASCII characters in server names",
+            recommendation="Use only standard ASCII characters in server names",
             metadata={"suspicious_chars": suspicious_chars}
         ))
     
@@ -145,13 +141,12 @@ def _check_embedding_similarity(name: str) -> List[Finding]:
                 known = config.known_servers[i]
                 if name.lower() != known.lower():
                     findings.append(Finding(
-                        id=str(uuid.uuid4()),
-                        type=FindingType.TYPOSQUATTING,
+                        category=FindingType.TYPOSQUATTING,
                         severity=Severity.MEDIUM,
                         title=f"High character similarity with '{known}'",
                         description=f"Server name '{name}' has high character-level similarity to '{known}' (cosine: {similarity:.2f})",
                         cwe_id="CWE-601",
-                        fix_suggestion="Choose a more distinctive server name",
+                        recommendation="Choose a more distinctive server name",
                         metadata={"similar_to": known, "cosine_similarity": similarity}
                     ))
     
