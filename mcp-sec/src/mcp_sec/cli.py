@@ -32,6 +32,7 @@ from mcp_sec.config import config
 from mcp_sec.models import ScanResult, Severity
 from mcp_sec.scanners import server_scanner, workspace_scanner, dependency_scanner
 from mcp_sec.scanners.github_scanner import scan_github_repo
+from mcp_sec.scanners import ClientDiscovery, ServerFinder, discover_and_scan_all
 from mcp_sec.reporters import generate_report, ReportFormat
 from mcp_sec.tracking import VersionTracker, ApprovalManager
 from mcp_sec.lockfile import LockFileManager, verify_against_lockfile
@@ -65,6 +66,139 @@ def main(
 ) -> None:
     """MCP Security Scanner - Shift-left security for MCP servers."""
     pass
+
+
+@app.command()
+def discover(
+    client: Optional[str] = typer.Option(None, "--client", "-c", help="Specific client to discover (claude, cursor, vscode, windsurf)"),
+    scan: bool = typer.Option(False, "--scan", "-s", help="Scan discovered servers for security issues"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed information")
+) -> None:
+    """Discover all MCP configurations on the system."""
+    with console.status("Discovering MCP configurations..."):
+        discovery = ClientDiscovery()
+        configs = discovery.discover_configs()
+        
+        if not configs:
+            console.print("[yellow]No MCP configurations found[/yellow]")
+            return
+        
+        # Filter by client if specified
+        if client:
+            configs = [c for c in configs if c.client_name == client]
+            if not configs:
+                console.print(f"[yellow]No configurations found for client '{client}'[/yellow]")
+                return
+        
+        # Display discovered configurations
+        table = Table(title="Discovered MCP Configurations")
+        table.add_column("Client", style="cyan")
+        table.add_column("Config Path", style="green")
+        table.add_column("Servers", style="yellow")
+        
+        for config in configs:
+            server_names = ", ".join(config.servers.keys()) if config.servers else "None"
+            table.add_row(
+                config.client_name,
+                str(config.config_path),
+                server_names
+            )
+        
+        console.print(table)
+        
+        # Show server details if verbose
+        if verbose:
+            finder = ServerFinder()
+            servers = finder.find_all_servers()
+            
+            console.print(f"\n[bold]Total servers found: {len(servers)}[/bold]")
+            
+            for server_info in servers:
+                console.print(f"\n[cyan]{server_info.server.name}[/cyan] ({server_info.client})")
+                console.print(f"  Type: {server_info.server.type}")
+                if server_info.server.command:
+                    console.print(f"  Command: {server_info.server.command}")
+                if server_info.server.url:
+                    console.print(f"  URL: {server_info.server.url}")
+        
+        # Run security scan if requested
+        if scan:
+            console.print("\n[bold]Running security scan...[/bold]")
+            servers, findings = discover_and_scan_all()
+            
+            if findings:
+                console.print(f"\n[yellow]Found {len(findings)} security issues:[/yellow]")
+                for finding in findings[:10]:  # Show first 10
+                    severity_color = {
+                        Severity.CRITICAL: "red",
+                        Severity.HIGH: "orange1",
+                        Severity.MEDIUM: "yellow",
+                        Severity.LOW: "blue",
+                        Severity.INFO: "green"
+                    }.get(finding.severity, "white")
+                    
+                    console.print(f"[{severity_color}]{finding.severity.upper()}[/{severity_color}]: {finding.title}")
+                    if verbose:
+                        console.print(f"  {finding.description}")
+                
+                if len(findings) > 10:
+                    console.print(f"\n... and {len(findings) - 10} more findings")
+            else:
+                console.print("[green]No security issues found[/green]")
+
+
+@app.command()
+def scan_all(
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output file path"),
+    format: ReportFormat = typer.Option(ReportFormat.JSON, "--format", "-f", help="Report format"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output")
+) -> None:
+    """Scan all discovered MCP configurations for security issues."""
+    with console.status("Discovering and scanning all MCP configurations..."):
+        start_time = datetime.now()
+        
+        try:
+            # Discover and scan
+            servers, findings = discover_and_scan_all()
+            
+            if not servers:
+                console.print("[yellow]No MCP servers found on system[/yellow]")
+                return
+            
+            # Create scan result
+            result = ScanResult(
+                scanner_name="comprehensive",
+                passed=len(findings) == 0,
+                findings=findings,
+                metadata={
+                    "scan_duration_seconds": (datetime.now() - start_time).total_seconds(),
+                    "scanned_at": start_time.isoformat(),
+                    "servers_found": len(servers),
+                    "clients_scanned": list(set(s.client for s in servers))
+                }
+            )
+            
+            _display_results(result)
+            
+            # Show server summary
+            console.print(f"\n[bold]Servers discovered: {len(servers)}[/bold]")
+            client_counts = {}
+            for server in servers:
+                client_counts[server.client] = client_counts.get(server.client, 0) + 1
+            
+            for client, count in client_counts.items():
+                console.print(f"  {client}: {count} servers")
+            
+            if output:
+                report = generate_report(result, format)
+                output.write_text(report)
+                console.print(f"\n[green]Report saved to: {output}[/green]")
+            
+            _exit_with_code(result)
+            
+        except Exception as e:
+            console.print(f"[red]Error during discovery scan: {e}[/red]")
+            raise typer.Exit(1)
 
 
 @app.command()

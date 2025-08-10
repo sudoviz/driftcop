@@ -45,7 +45,7 @@ def scan_github_repo(
         repo = repo[:-4]
     
     # Create temporary directory for cloning
-    temp_dir = tempfile.mkdtemp(prefix=f"mcp-scan-{repo}-")
+    temp_dir = tempfile.mkdtemp(prefix=f"driftcop-scan-{repo}-")
     
     try:
         # Clone the repository

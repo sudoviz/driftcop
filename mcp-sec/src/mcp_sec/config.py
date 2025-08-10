@@ -1,12 +1,37 @@
 """Configuration for MCP Security Scanner."""
 
 import os
-from typing import List, Optional
+import sys
+from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
+
+
+class DiscoveryConfig(BaseModel):
+    """Configuration for MCP client discovery."""
+    
+    # Client paths based on platform
+    client_paths: Dict[str, List[str]] = Field(default_factory=lambda: {
+        "windsurf": ["~/.codeium/windsurf/mcp_config.json"],
+        "cursor": ["~/.cursor/mcp.json"],
+        "claude": ["~/Library/Application Support/Claude/claude_desktop_config.json"] if sys.platform == "darwin" 
+                  else ["~/AppData/Roaming/Claude/claude_desktop_config.json"] if sys.platform == "win32"
+                  else [],
+        "vscode": ["~/.vscode/mcp.json", "~/Library/Application Support/Code/User/settings.json"] if sys.platform == "darwin"
+                  else ["~/.vscode/mcp.json", "~/AppData/Roaming/Code/User/settings.json"] if sys.platform == "win32"
+                  else ["~/.vscode/mcp.json", "~/.config/Code/User/settings.json"],
+    })
+    
+    # Auto-discovery settings
+    auto_discover: bool = True
+    scan_all_clients: bool = False
+    preferred_clients: List[str] = Field(default_factory=lambda: ["claude", "cursor", "vscode", "windsurf"])
 
 
 class ScannerConfig(BaseModel):
     """Scanner configuration."""
+    
+    # Discovery settings
+    discovery: DiscoveryConfig = Field(default_factory=DiscoveryConfig)
     
     # OpenAI settings
     openai_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))

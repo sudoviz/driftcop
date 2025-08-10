@@ -2,6 +2,7 @@
 **/.venv
 .venv
 
+tmp
 # Environment variables
 **/.env
 .env
