@@ -2,8 +2,7 @@
 **/.venv
 .venv
 
-mcp-scan-main
-
+tmp
 # Environment variables
 **/.env
 .env
