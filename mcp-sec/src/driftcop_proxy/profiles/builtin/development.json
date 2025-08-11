@@ -1,0 +1,45 @@
+{
+  "name": "development",
+  "version": "1.0.0",
+  "description": "Relaxed security for development environments",
+  "interceptors": [
+    {
+      "type": "logging",
+      "config": {
+        "log_level": "debug",
+        "include_payload": true,
+        "output": "console",
+        "format": "pretty",
+        "colorize": true
+      }
+    },
+    {
+      "type": "security",
+      "config": {
+        "enable_tool_poisoning": true,
+        "enable_cross_origin": false,
+        "enable_toxic_flow": true,
+        "enable_semantic_drift": false,
+        "block_threshold": 8.0,
+        "review_threshold": 5.0,
+        "use_worker_pool": false
+      }
+    },
+    {
+      "type": "rate_limit",
+      "config": {
+        "limits": {
+          "tools/call": "100/minute",
+          "resources/write": "50/minute"
+        },
+        "enforce_mode": "log",
+        "burst_multiplier": 2.0
+      }
+    }
+  ],
+  "metadata": {
+    "category": "development",
+    "risk_level": "low",
+    "use_case": "Local development and testing"
+  }
+}

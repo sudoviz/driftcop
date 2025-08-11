@@ -1,0 +1,70 @@
+{
+  "name": "block-dangerous-tools",
+  "version": "1.0.0",
+  "description": "Block dangerous system tools and commands",
+  "interceptors": [
+    {
+      "type": "filter",
+      "config": {
+        "description": "Block dangerous tool calls",
+        "condition": {
+          "type": "and",
+          "conditions": [
+            {
+              "field": "method",
+              "operator": "equals",
+              "value": "tools/call"
+            },
+            {
+              "type": "or",
+              "conditions": [
+                {
+                  "field": "params.tool",
+                  "operator": "in",
+                  "value": ["rm", "rmdir", "del", "format", "fdisk", "dd", "mkfs"]
+                },
+                {
+                  "field": "params.arguments.command",
+                  "operator": "matches",
+                  "value": ".*(rm|delete|format|wipe).*"
+                },
+                {
+                  "field": "params.tool",
+                  "operator": "matches",
+                  "value": ".*exec.*|.*shell.*|.*system.*"
+                }
+              ]
+            }
+          ]
+        },
+        "match_action": "block",
+        "block_message": "Dangerous tool blocked for security reasons"
+      }
+    },
+    {
+      "type": "security",
+      "config": {
+        "enable_tool_poisoning": true,
+        "enable_toxic_flow": true,
+        "block_threshold": 5.0,
+        "use_worker_pool": true
+      }
+    },
+    {
+      "type": "rate_limit",
+      "config": {
+        "limits": {
+          "tools/call": "10/minute",
+          "resources/write": "5/minute",
+          "resources/delete": "2/minute"
+        },
+        "enforce_mode": "block"
+      }
+    }
+  ],
+  "metadata": {
+    "category": "security",
+    "risk_level": "critical",
+    "use_case": "Prevent dangerous operations"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "name": "approve-tool-calls",
+  "version": "1.0.0",
+  "description": "Require manual approval for all tool call requests",
+  "interceptors": [
+    {
+      "type": "filter",
+      "config": {
+        "description": "Filter tool call requests",
+        "condition": {
+          "type": "and",
+          "conditions": [
+            {
+              "field": "direction",
+              "operator": "equals",
+              "value": "outbound"
+            },
+            {
+              "field": "method",
+              "operator": "equals",
+              "value": "tools/call"
+            }
+          ]
+        },
+        "action": "continue"
+      }
+    },
+    {
+      "type": "approval",
+      "config": {
+        "require_approval_for": ["tools/call"],
+        "timeout": 300,
+        "default_action": "deny",
+        "include_risk_assessment": true,
+        "notification": {
+          "enabled": true,
+          "message": "Tool call request requires approval: {method}"
+        }
+      }
+    },
+    {
+      "type": "logging",
+      "config": {
+        "log_level": "info",
+        "include_payload": true,
+        "message_format": "Tool call {approved}: {method} - {params.tool}"
+      }
+    }
+  ],
+  "metadata": {
+    "category": "security",
+    "risk_level": "low",
+    "use_case": "Human-in-the-loop for tool execution"
+  }
+}

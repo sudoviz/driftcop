@@ -1,0 +1,152 @@
+{
+  "name": "strict-compliance",
+  "version": "1.0.0",
+  "description": "Maximum security for compliance environments (SOC2, HIPAA, PCI-DSS)",
+  "interceptors": [
+    {
+      "type": "rate_limit",
+      "config": {
+        "limits": {
+          "tools/call": "5/minute",
+          "resources/write": "2/minute",
+          "resources/delete": "1/hour",
+          "prompts/execute": "10/minute"
+        },
+        "enforce_mode": "block",
+        "use_global_limits": true
+      }
+    },
+    {
+      "type": "filter",
+      "config": {
+        "description": "Block sensitive operations",
+        "condition": {
+          "type": "or",
+          "conditions": [
+            {
+              "field": "params.path",
+              "operator": "matches",
+              "value": ".*(password|secret|key|token|credential).*"
+            },
+            {
+              "field": "params.content",
+              "operator": "matches",
+              "value": ".*(\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b|\\b\\d{3}-\\d{2}-\\d{4}\\b).*"
+            }
+          ]
+        },
+        "action": "block",
+        "block_message": "Operation blocked: Contains sensitive data"
+      }
+    },
+    {
+      "type": "security",
+      "config": {
+        "enable_tool_poisoning": true,
+        "enable_cross_origin": true,
+        "enable_toxic_flow": true,
+        "enable_semantic_drift": true,
+        "block_threshold": 3.0,
+        "review_threshold": 1.0,
+        "use_worker_pool": true
+      }
+    },
+    {
+      "type": "sigstore",
+      "config": {
+        "verify_signatures": true,
+        "require_signed_manifests": true,
+        "trusted_keys": ["~/.driftcop/keys/trusted.pub"],
+        "fail_on_unsigned": true
+      }
+    },
+    {
+      "type": "approval",
+      "config": {
+        "require_approval_for": [
+          "tools/call",
+          "resources/write",
+          "resources/delete",
+          "prompts/execute"
+        ],
+        "timeout": 300,
+        "default_action": "deny",
+        "multi_approval": {
+          "enabled": true,
+          "required_approvals": 2,
+          "approver_groups": ["security", "compliance"]
+        }
+      }
+    },
+    {
+      "type": "transform",
+      "config": {
+        "rules": [
+          {
+            "name": "redact-pii",
+            "transform": {
+              "type": "redact",
+              "patterns": [
+                "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+                "\\b(?:\\d{4}[-\\s]?){3}\\d{4}\\b",
+                "\\b\\d{3}-\\d{2}-\\d{4}\\b"
+              ]
+            }
+          },
+          {
+            "name": "sanitize-params",
+            "transform": {
+              "type": "sanitize",
+              "sensitive_params": [
+                "password", "token", "secret", "api_key",
+                "auth", "credential", "private_key"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "audit",
+      "config": {
+        "enabled": true,
+        "compliance_mode": "ALL",
+        "include_request": true,
+        "include_response": true,
+        "include_metadata": true,
+        "hash_messages": true,
+        "sign_logs": true,
+        "immutable_storage": true,
+        "retention_days": 2555,
+        "alert_on_violations": true
+      }
+    },
+    {
+      "type": "logging",
+      "config": {
+        "log_level": "debug",
+        "include_payload": true,
+        "include_metadata": true,
+        "include_stack_trace": true,
+        "outputs": ["file", "syslog", "elasticsearch"],
+        "file_path": "~/.driftcop/logs/compliance.log",
+        "syslog": {
+          "host": "localhost",
+          "port": 514,
+          "protocol": "tcp",
+          "facility": "local0"
+        },
+        "elasticsearch": {
+          "url": "http://localhost:9200",
+          "index": "driftcop-compliance"
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "category": "compliance",
+    "risk_level": "paranoid",
+    "use_case": "SOC2, HIPAA, PCI-DSS compliance",
+    "certifications": ["SOC2", "HIPAA", "PCI-DSS", "ISO27001"]
+  }
+}

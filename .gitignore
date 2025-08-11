@@ -1,8 +1,13 @@
 # Python virtual environments
 **/.venv
 .venv
-
-tmp
+mcp-sec/BUSINESS_MODEL.md
+mcp-sec/BUSINESS_MODEL_FEATURE_MAPPING.md
+mcp-sec/CONFORMANCE_REPORT.md
+mcp-sec/DRIFTCOP_PROXY_FINAL_PLAN.md
+mcp-sec/FREEMIUM_IMPLEMENTATION_PLAN.md
+mcp-sec/PROXY_INTEGRATION_ANALYSIS.md
+tmp/
 # Environment variables
 **/.env
 .env

@@ -1,0 +1,40 @@
+{
+  "name": "log-only",
+  "version": "1.0.0",
+  "description": "Log all messages without blocking (audit mode)",
+  "interceptors": [
+    {
+      "type": "logging",
+      "config": {
+        "log_level": "info",
+        "include_payload": true,
+        "include_metadata": true,
+        "output": "file",
+        "file_path": "~/.driftcop/logs/audit.log",
+        "rotation": {
+          "enabled": true,
+          "max_size": "100MB",
+          "max_files": 10
+        },
+        "format": "json",
+        "sanitize_sensitive": true
+      }
+    },
+    {
+      "type": "audit",
+      "config": {
+        "enabled": true,
+        "include_request": true,
+        "include_response": true,
+        "hash_messages": true,
+        "retention_days": 90,
+        "compliance_mode": "SOC2"
+      }
+    }
+  ],
+  "metadata": {
+    "category": "monitoring",
+    "risk_level": "none",
+    "use_case": "Audit and compliance logging"
+  }
+}
