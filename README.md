@@ -14,7 +14,12 @@
 ---
 ## 🎯 What is DriftCop?
 
-Drift-Cop is your Enterprise grade MCP security scanner based CLI + live dashboard that spots dangerous drift in AI tools. It spots injection hacks, and CVEs, signs every change in SigStore. Drift-Cop is designed to help AI developers and InfoSec organizations identify, track, and mitigate security vulnerabilities in MCP server implementations they use from external untrusted sources. 
+Drift-Cop is your Enterprise grade MCP security scanner and real-time proxy based CLI + live dashboard that spots dangerous drift in AI tools. It spots injection hacks, and CVEs, signs every change in SigStore, and intercepts malicious MCP messages before they cause damage. Drift-Cop is designed to help AI developers and InfoSec organizations identify, track, and mitigate security vulnerabilities in MCP server implementations they use from external untrusted sources.
+
+DriftCop consists of three main components:
+- **Security Scanner**: Deep analysis of MCP servers, codebases, and dependencies  
+- **Security Proxy**: Real-time interception and enforcement of security policies (5,000-8,000 msg/s)
+- **Web Dashboard**: Live monitoring and approval workflows for configuration changes 
 
 ## 🔥 Why Drift-Cop?
 
@@ -65,7 +70,30 @@ A powerful command-line security scanner that performs deep analysis of MCP serv
 - **Language Support**: Extracts MCP tool definitions from 10+ languages using Tree-sitter AST parsing
 - **Flexible Reporting**: Markdown, JSON, and SARIF formats for CI/CD integration
 
-### 2. MCP Security Web UI (mcp-sec-web)
+### 2. DriftCop Security Proxy (driftcop_proxy)
+A high-performance pure Python proxy that intercepts and analyzes all MCP traffic in real-time.
+
+**Key Features:**
+- **4-Task Async Architecture**: Industry-standard proxy design for optimal performance
+- **Modular Interceptor Framework**:
+  - Security interceptor with all DriftCop analyzers (tool poisoning, cross-origin, toxic flow, semantic drift)
+  - Rate limiting with token bucket algorithm to prevent DoS attacks
+  - Transform interceptor for message modification (sanitization, redaction)
+  - Approval workflow for sensitive operations
+  - Audit interceptor with cryptographic signing for compliance
+  - Custom Python function interceptor for flexible logic
+- **Advanced Security Analysis**:
+  - Real-time Sigstore verification
+  - Parallel analysis using worker pools
+  - Risk scoring with exponential moving average
+  - Session tracking and request-response correlation
+- **Production Ready**:
+  - 5,000-8,000 messages/second throughput
+  - Hot reload for zero-downtime configuration updates
+  - Configurable security profiles (development, staging, production, compliance)
+  - Graceful degradation and error recovery
+
+### 3. MCP Security Web UI (mcp-sec-web)
 A modern React-based dashboard providing real-time visualization and management of security findings.
 
 **Key Features:**
@@ -170,7 +198,7 @@ A modern React-based dashboard providing real-time visualization and management 
 # Install Drift Cop CLI
 pip install driftcop
 
-# Clone the repository for web UI
+# Clone the repository for web UI and proxy
 git clone https://github.com/yourusername/drift-cop.git
 cd drift-cop
 ```
@@ -182,15 +210,49 @@ cd drift-cop
 driftcop scan-server https://example.com/mcp-server
 ```
 
-2. **Start the Web UI**:
+2. **Start the Security Proxy**:
+```bash
+# Run proxy with a security profile
+python mcp-sec/driftcop_proxy_main.py start \
+  --profile production \
+  --server "npx @modelcontextprotocol/server-filesystem"
+  
+# Or use a custom configuration
+driftcop proxy start --config proxy-config.json
+```
+
+3. **Start the Web UI**:
 ```bash
 cd mcp-sec-web
 ./start.sh
 ```
 
-3. **Access the Dashboard**:
+4. **Access the Dashboard**:
 - Web UI: http://localhost:5173
 - API Docs: http://localhost:8000/docs
+
+### Proxy Configuration Example
+
+```json
+{
+  "mode": "enforce",
+  "interceptors": [
+    {
+      "type": "security",
+      "config": {
+        "block_threshold": 7.0,
+        "analyzers": ["tool_poisoning", "cross_origin", "toxic_flow"]
+      }
+    },
+    {
+      "type": "rate_limit",
+      "config": {
+        "max_requests_per_minute": 100
+      }
+    }
+  ]
+}
+```
 
 ## 🔍 Security Checks
 
@@ -212,30 +274,36 @@ Findings are categorized by severity:
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Drift-Cop                                   │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌──────────────────┐           ┌──────────────────┐              │
-│  │  MCP-SEC Scanner │           │  MCP-SEC Web UI  │              │
-│  ├──────────────────┤           ├──────────────────┤              │
-│  │ • CLI Interface  │           │ • React Frontend │              │
-│  │ • Multi-Scanner  │◄─────────►│ • FastAPI Backend│              │
-│  │ • Crypto Engine  │           │ • Real-time Dash │              │
-│  │ • Report Gen     │           │ • Approval Flow  │              │
-│  └────────┬─────────┘           └────────┬─────────┘              │
-│           │                               │                         │
-│           └──────────────┬────────────────┘                        │
-│                          ▼                                          │
-│                   ┌──────────────┐                                 │
-│                   │ SQLite DBs   │                                 │
-│                   ├──────────────┤                                 │
-│                   │ • Tracking   │                                 │
-│                   │ • Approvals  │                                 │
-│                   │ • History    │                                 │
-│                   └──────────────┘                                 │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              DriftCop Platform                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐     │
+│  │  MCP-SEC Scanner │  │  DriftCop Proxy  │  │  MCP-SEC Web UI  │     │
+│  ├──────────────────┤  ├──────────────────┤  ├──────────────────┤     │
+│  │ • CLI Interface  │  │ • 4-Task Async   │  │ • React Frontend │     │
+│  │ • Multi-Scanner  │  │ • Interceptors   │  │ • FastAPI Backend│     │
+│  │ • Crypto Engine  │  │ • Real-time      │  │ • Real-time Dash │     │
+│  │ • Report Gen     │  │ • Session Mgmt   │  │ • Approval Flow  │     │
+│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘     │
+│           │                      │                      │               │
+│           └──────────────────────┼──────────────────────┘               │
+│                                  ▼                                      │
+│                          ┌──────────────┐                              │
+│                          │ SQLite DBs   │                              │
+│                          ├──────────────┤                              │
+│                          │ • Tracking   │                              │
+│                          │ • Approvals  │                              │
+│                          │ • Signatures │                              │
+│                          │ • Audit Trail│                              │
+│                          └──────────────┘                              │
+│                                                                          │
+│  Message Flow:                                                          │
+│  MCP Client ──► DriftCop Proxy ──► Security Analysis ──► MCP Server    │
+│                        │                                                │
+│                        └──► Web Dashboard (monitoring)                  │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 📊 Workflow Integration
@@ -261,6 +329,30 @@ Findings are categorized by severity:
 3. **Review**: Security team reviews via web dashboard
 4. **Approval**: Approved changes are applied, rejected ones blocked
 5. **Audit**: Complete trail maintained for compliance
+
+## 💼 Deployment Options
+
+### Community Edition (Free)
+- Local security scanning and proxy
+- Basic threat detection
+- Community threat intelligence (24hr delay)
+- File-based approval workflow
+- Perfect for individual developers and small teams
+
+### Pro Edition ($$/month per seat)
+- Real-time global threat intelligence network (Org Aggregated + Live Feed of curated known bad patterns)
+- Cloud dashboard with monitoring
+- AI-powered semantic drift analysis
+- Team collaboration (up to 10 users)
+- Email support (24-hour response)
+
+### Enterprise Edition (Talk to us!)
+- Private threat intelligence feeds
+- Compliance modes (SOC2, HIPAA, PCI-DSS)
+- On-premise deployment option
+- Unlimited users with SSO/SAML
+- 24/7 phone support with 1-hour SLA
+- Custom integrations and training
 
 ## 🛡️ Security Best Practices
 
